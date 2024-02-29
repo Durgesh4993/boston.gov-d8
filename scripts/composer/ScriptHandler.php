@@ -35,21 +35,34 @@ class ScriptHandler {
       }
     }
 
-    // Prepare the settings file for installation
-    if (!$fs->exists($drupalRoot . '/sites/default/settings.php') and $fs->exists($drupalRoot . '/sites/default/default.settings.php')) {
-      $fs->copy($drupalRoot . '/sites/default/default.settings.php', $drupalRoot . '/sites/default/settings.php');
-      require_once $drupalRoot . '/core/includes/bootstrap.inc';
-      require_once $drupalRoot . '/core/includes/install.inc';
-      $settings['config_directories'] = [
+  // Check if settings.php doesn't exist and default.settings.php does exist
+if (!$fs->exists($drupalRoot . '/sites/default/settings.php') and $fs->exists($drupalRoot . '/sites/default/default.settings.php')) {
+    
+    // Copy default.settings.php to settings.php
+    $fs->copy($drupalRoot . '/sites/default/default.settings.php', $drupalRoot . '/sites/default/settings.php');
+
+    // Include necessary Drupal core files
+    require_once $drupalRoot . '/core/includes/bootstrap.inc';
+    require_once $drupalRoot . '/core/includes/install.inc';
+
+    // Set up configuration directories for Drupal installation
+    $settings['config_directories'] = [
         CONFIG_SYNC_DIRECTORY => (object) [
-          'value' => Path::makeRelative($drupalFinder->getComposerRoot() . '/config/sync', $drupalRoot),
-          'required' => TRUE,
+            'value' => Path::makeRelative($drupalFinder->getComposerRoot() . '/config/sync', $drupalRoot),
+            'required' => TRUE,
         ],
-      ];
-      drupal_rewrite_settings($settings, $drupalRoot . '/sites/default/settings.php');
-      $fs->chmod($drupalRoot . '/sites/default/settings.php', 0666);
-      $event->getIO()->write("Create a sites/default/settings.php file with chmod 0666");
-    }
+    ];
+
+    // Rewrite settings.php with updated settings
+    drupal_rewrite_settings($settings, $drupalRoot . '/sites/default/settings.php');
+
+    // Change permissions of settings.php file to 0666
+    $fs->chmod($drupalRoot . '/sites/default/settings.php', 0666);
+
+    // Output a message indicating the creation of settings.php with specific permissions
+    $event->getIO()->write("Create a sites/default/settings.php file with chmod 0666");
+}
+
 
     // Create the files directory with chmod 0777
     if (!$fs->exists($drupalRoot . '/sites/default/files')) {
